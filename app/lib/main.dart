@@ -9,6 +9,7 @@ import 'pages/complex_example.dart';
 import 'pages/events_example.dart';
 import 'pages/multi_example.dart';
 import 'pages/range_example.dart';
+import 'pages/lichhoc.dart';
 
 void main() {
   initializeDateFormatting().then((_) => runApp(MyApp()));
@@ -81,6 +82,14 @@ class _StartPageState extends State<StartPage> {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => TableComplexExample()),
+              ),
+            ),
+            const SizedBox(height: 12.0),
+            ElevatedButton(
+              child: Text('Lịch học'),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => LichHoc()),
               ),
             ),
             const SizedBox(height: 20.0),
