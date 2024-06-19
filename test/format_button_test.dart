@@ -3,8 +3,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:table_calendar/src/widgets/format_button.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:lichhoc/src/widgets/format_button.dart';
+import 'package:lichhoc/table_calendar.dart';
 
 import 'common.dart';
 

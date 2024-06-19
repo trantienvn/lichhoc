@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:table_calendar/src/widgets/calendar_page.dart';
+import 'package:lichhoc/src/widgets/calendar_page.dart';
 
 Widget setupTestWidget(Widget child) {
   return Directionality(
@@ -148,5 +148,4 @@ void main() {
       );
     },
   );
-
 }

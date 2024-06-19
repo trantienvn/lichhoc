@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_gesture_detector/simple_gesture_detector.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:lichhoc/table_calendar.dart';
 
 import 'common.dart';
 

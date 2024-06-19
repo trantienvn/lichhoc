@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart' hide TextDirection;
-import 'package:table_calendar/src/widgets/cell_content.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:lichhoc/src/widgets/cell_content.dart';
+import 'package:lichhoc/table_calendar.dart';
 
 Widget setupTestWidget(
   DateTime cellDay, {
