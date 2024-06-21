@@ -1,6 +1,6 @@
-import 'dart:ffi';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:cookie_jar/cookie_jar.dart';
+import 'package:http/http.dart';
 import 'package:excel/excel.dart';
 
 const loginURL = "http://220.231.119.171/kcntt/login.aspx";
@@ -96,19 +96,70 @@ String thutrongtuan(int thu, String batdau, String ketthuc) {
 }
 
 class HttpClient {
-  final client = http.Client();
+  final client = Client();
   Map<String, String> headers = {
     'User-Agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   };
-
-  Future<http.Response> get(String url) {
-    return client.get(Uri.parse(url), headers: headers);
+  Future<String> getLH(String url) async {
+    Response response = await get(Uri.parse(url), headers: headers);
+    if (response.statusCode != 200) {
+      return 'Login failed';
+    }
+    return response.body;
   }
 
-  Future<http.Response> post(String url, Map<String, String> body) {
+  Future<Response> post(String url, Map<String, String> body) {
     return client.post(Uri.parse(url), headers: headers, body: body);
   }
 }
 
-class LichHoc {}
+class HttpClientWithCookies extends BaseClient {
+  final DefaultCookieJar cookieJar;
+  final Client _inner;
+
+  HttpClientWithCookies(this.cookieJar) : _inner = Client();
+
+  @override
+  Future<StreamedResponse> send(BaseRequest request) async {
+    final cookies = await cookieJar.loadForRequest(request.url);
+    final cookieHeader =
+        cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
+
+    request.headers['Cookie'] = cookieHeader;
+    request.headers['User-Agent'] =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+    final response = await _inner.send(request);
+
+    final setCookies = response.headers['set-cookie'];
+    if (setCookies != null) {
+      final uri = request.url;
+      final cookies = setCookies.split(', ');
+      for (var cookie in cookies) {
+        cookieJar.saveFromResponse(uri, [Cookie.fromSetCookieValue(cookie)]);
+      }
+    }
+
+    return response;
+  }
+}
+
+class LichHocJson {
+  void main() {
+    final jar = DefaultCookieJar();
+    final client = HttpClientWithCookies(jar);
+    client.get(Uri.parse(loginURL)).then((response) {
+      print(response);
+    });
+  }
+
+  Future<String> getlichhoc(String username, String password) async {
+    HttpClient client = HttpClient();
+    await client.getLH(loginURL).then((response) {
+      //print(response);
+      return response;
+    });
+    return 'lich hoc';
+  }
+}
