@@ -144,6 +144,7 @@ class _LichHocState extends State<LichHoc> {
                 return ListView.builder(
                   itemCount: value.length,
                   itemBuilder: (context, index) {
+                    var item = value[index];
                     return Container(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 12.0,
@@ -154,8 +155,33 @@ class _LichHocState extends State<LichHoc> {
                         borderRadius: BorderRadius.circular(12.0),
                       ),
                       child: ListTile(
-                        onTap: () => print('${value[index]}'),
-                        title: Text('${value[index]}'),
+                        onTap: () => print('$item'),
+                        title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tiêu đề 1: ${item}',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 4.0),
+                            Text('Thời gian: ${item}'),
+                            SizedBox(height: 4.0),
+                            Text('Địa điểm: ${item}'),
+                            SizedBox(height: 4.0),
+                            Text('Giảng viên: ${item}'),
+                            SizedBox(height: 4.0),
+                            GestureDetector(
+                              onTap: () {
+                                // Handle the link tap here
+                                print('Link meet: ${item}');
+                              },
+                              child: Text(
+                                'Link meet: ${item}',
+                                style: TextStyle(color: Colors.blue),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
