@@ -7,12 +7,12 @@ import 'package:lichhoc/table_calendar.dart';
 
 /// Example event class.
 class Event {
-  final String title;
+  final String tenHP;
 
-  const Event(this.title);
+  const Event(this.tenHP);
 
   @override
-  String toString() => title;
+  String toString() => tenHP;
 }
 
 /// Example events.

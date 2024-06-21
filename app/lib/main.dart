@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lichhoc/table_calendar.dart';
-import 'package:lichhoc/getlichhoc.dart';
+//import 'package:lichhoc/getlichhoc.dart';
 import '../utils.dart';
 
 void main() {
@@ -65,6 +65,13 @@ class _LichHocState extends State<LichHoc> {
     return [
       for (final d in days) ..._getEventsForDay(d),
     ];
+  }
+
+  Future<void> _launchURL(String url) async {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://$url';
+    }
+    //launch url
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -160,9 +167,12 @@ class _LichHocState extends State<LichHoc> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Tiêu đề 1: ${item}',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              '${item}',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 24.0),
                             ),
+                            SizedBox(height: 4.0),
+                            Text('Mã học phần: ${item}'),
                             SizedBox(height: 4.0),
                             Text('Thời gian: ${item}'),
                             SizedBox(height: 4.0),
