@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lichhoc/table_calendar.dart';
 import 'package:lichhoc/getlichhoc.dart';
-import '../utils.dart';
+import 'utils.dart';
 
 String data = "";
 Future<void> main() async {
@@ -71,12 +71,12 @@ class _LichHocState extends State<LichHoc> {
     ];
   }
 
-  Future<void> _launchURL(String url) async {
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      url = 'https://$url';
-    }
-    //launch url
-  }
+  // Future<void> _launchURL(String url) async {
+  //   if (!url.startsWith('http://') && !url.startsWith('https://')) {
+  //     url = 'https://$url';
+  //   }
+  //   //launch url
+  // }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     if (!isSameDay(_selectedDay, selectedDay)) {

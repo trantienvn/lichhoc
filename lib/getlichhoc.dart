@@ -1,4 +1,4 @@
-import 'dart:html';
+import 'dart:typed_data';
 import 'dart:io' as io;
 import 'dart:convert';
 import 'package:excel/excel.dart';
@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' show parse;
 import 'package:html/dom.dart';
 import 'package:crypto/crypto.dart';
+import 'package:path_provider/path_provider.dart';
 
 String urlLogin = "http://220.231.119.171/kcntt/login.aspx";
 String curenURL = "";
@@ -112,7 +113,7 @@ Future<String> getData(String username, String password, bool? ishash) async {
           SinhVienDocument.getElementById("PageHeader1_lblUserFullName");
       //print(SinhViendata.body.toString());
 
-      print(SinhViendata.statusCode);
+      //print(SinhViendata.statusCode);
       if (StudentInfo != null) {
         print(StudentInfo.text);
         String name = StudentInfo.text.split('(')[0];
@@ -124,25 +125,39 @@ Future<String> getData(String username, String password, bool? ishash) async {
             Uri.parse(
                 "http://220.231.119.171/kcntt/(S($sessioncode))/Reports/Form/StudentTimeTable.aspx"),
             headers: {
-              'Cookie': SinhViendata.headers['set-cookie'] ?? '',
+              'Cookie': postResponse.headers['set-cookie'] ?? '',
             });
+        print(getXlsWeb.request!.url);
         var getXlsDocument = parse(utf8.decode(getXlsWeb.bodyBytes));
+        //print(getXlsWeb.body);
         var hiddenFields =
             getXlsDocument.querySelectorAll('input[type="hidden"]');
-        final Map<String, String> hiddenValues = {};
+        var hiddenValues = <String, String>{};
         for (var hiddenField in hiddenFields) {
-          hiddenValues[hiddenField.attributes['name'] as String] =
-              hiddenField.attributes['value'] as String;
+          hiddenValues[hiddenField.attributes['name'] ?? ''] =
+              hiddenField.attributes['value'] ?? "";
         }
-        var semester =
-            (getXlsDocument.getElementById('drpSemester') as SelectElement)
-                .value;
-        var term =
-            (getXlsDocument.getElementById('drpTerm') as SelectElement).value;
-        var type =
-            (getXlsDocument.getElementById('drpType') as SelectElement).value;
-        var btnView =
-            (getXlsDocument.getElementById('btnView') as ButtonElement).text;
+        var semester = getXlsDocument.getElementById('drpSemester');
+        var term = getXlsDocument.getElementById('drpTerm');
+        var type = getXlsDocument.getElementById('drpType');
+        var btnView = getXlsDocument.getElementById('btnView');
+        var formData = <String, String>{
+          ...hiddenValues,
+          'drpSemester': semester?.attributes['value'] ?? '',
+          'drpTerm': term?.attributes['value'] ?? '',
+          'drpType': type?.attributes['value'] ?? '',
+          'btnView': btnView?.text ?? 'Xuất file Excel'
+        };
+        print(formData);
+        var getXlsFilesForm = await http.post(
+            Uri.parse(
+                "http://220.231.119.171/kcntt/(S($sessioncode))/Reports/Form/StudentTimeTable.aspx"),
+            headers: {
+              'Cookie': postResponse.headers['set-cookie'] ?? '',
+            },
+            body: formData);
+        print(getXlsFilesForm.body);
+        saveXlsFile(getXlsFilesForm.bodyBytes);
       }
       return 'Login successful';
     } else {
@@ -204,6 +219,17 @@ Future<List<List<dynamic>>> parseExcel(io.File file) async {
     }
   }
   return jsonData;
+}
+
+void saveXlsFile(Uint8List data) async {
+  try {
+    String dir = (await getApplicationDocumentsDirectory()).path;
+    io.File file = new io.File("$dir/app.xls");
+    await file.writeAsBytes(data);
+    print("File saved to $dir/app.xls");
+  } catch (e) {
+    print("Error saving file: $e");
+  }
 }
 
 String parseDate(String dateString) {
