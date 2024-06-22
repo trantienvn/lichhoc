@@ -42,6 +42,15 @@ android {
         versionName flutterVersionName
     }
 
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+            universalApk true  // Tùy chọn, nếu bạn không muốn tạo một APK universal
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
@@ -54,4 +63,3 @@ android {
 flutter {
     source '../..'
 }
-

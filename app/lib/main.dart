@@ -4,11 +4,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lichhoc/table_calendar.dart';
-//import 'package:lichhoc/getlichhoc.dart';
+import 'package:lichhoc/getlichhoc.dart';
 import '../utils.dart';
 
-void main() {
+String data = "";
+Future<void> main() async {
   initializeDateFormatting().then((_) => runApp(MyApp()));
+  data = (await getData("dtc235200749", "02092005", false)).toString();
 }
 
 class MyApp extends StatelessWidget {

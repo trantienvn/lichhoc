@@ -1,9 +1,136 @@
 import 'dart:io';
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:http/http.dart';
+import 'dart:convert';
 import 'package:excel/excel.dart';
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' show parse;
+import 'package:html/dom.dart';
+import 'package:crypto/crypto.dart';
 
-const loginURL = "http://220.231.119.171/kcntt/login.aspx";
+String urlLogin = "http://220.231.119.171/kcntt/login.aspx";
+String curenURL = "";
+String homeURL = "http://220.231.119.171/kcntt/Home.aspx";
+String sessioncode = "";
+
+Future<String> getData(String username, String password, bool? ishash) async {
+  try {
+    // Initial GET request to fetch the login form
+    var session = await http.get(
+      Uri.parse(urlLogin),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    );
+    if (session.statusCode != 200) {
+      if (session.statusCode == 302) {
+        String locationHeader = session.headers['location'] as String;
+        curenURL =
+            '${urlLogin.split("kcntt")[0]}kcntt${locationHeader.split("kcntt")[1]}';
+      } else
+        throw Exception('Failed to load login page');
+    }
+    print(curenURL);
+
+    var document = parse(utf8.decode(session.bodyBytes));
+
+    // Utility function to get all form elements
+    List<Element> getAllFormElements(Element form) {
+      return form.querySelectorAll('input, select, textarea').where((tag) {
+        return tag.attributes.containsKey('name');
+      }).toList();
+    }
+
+    // Create the body for POST request
+    var body = <String, String>{};
+    var form = document.getElementById('Form1');
+    if (form != null) {
+      var elements = getAllFormElements(form);
+
+      for (var element in elements) {
+        var key = element.attributes['name'];
+        var value = element.attributes['value'];
+
+        if (key == 'txtUserName') {
+          value = username;
+        } else if (key == 'txtPassword') {
+          if (ishash != null && ishash) {
+            value = password;
+          } else {
+            value = md5.convert(utf8.encode(password)).toString();
+          }
+        }
+
+        if (value != null) {
+          body[key!] = value;
+        }
+      }
+
+      // Sending POST request
+      var postResponse;
+      curenURL = urlLogin;
+      var code = 0;
+      while (curenURL == urlLogin) {
+        postResponse = await http.post(
+          Uri.parse(
+              curenURL), // Should be the same login URL or the action URL from the form
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Cookie': session.headers['set-cookie'] ?? '',
+          },
+          body: body,
+        );
+        if (postResponse.statusCode == 302) {
+          String locationHeader = postResponse.headers['location'].toString();
+          curenURL =
+              '${urlLogin.split("kcntt")[0]}kcntt${locationHeader.split("kcntt")[1]}';
+          sessioncode = curenURL.split("(S(")[1].split("))")[0];
+        } else if (postResponse.statusCode == 200) {
+          curenURL = postResponse.request!.url.toString();
+        }
+        code = postResponse.statusCode;
+      }
+      print(curenURL);
+      postResponse = await http.post(
+        Uri.parse(curenURL),
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: body,
+      );
+      // if (postResponse.statusCode != 200) {
+      //   throw Exception(
+      //       'Failed to submit login form, code: ${postResponse.statusCode}');
+      // }
+      //print(postResponse.body);
+
+      var postDocument = parse(utf8.decode(postResponse.bodyBytes));
+      var errorInfo = postDocument.getElementById('lblErrorInfo');
+      print(errorInfo);
+      if (errorInfo != null) {
+        print('Error Info: ${errorInfo.text}');
+        return errorInfo.text.trim();
+      }
+      var SinhViendata = await http.get(Uri.parse(homeURL), headers: {
+        'Cookie': postResponse.headers['set-cookie'] ?? '',
+      });
+      var SinhVienDocument = parse(utf8.decode(SinhViendata.bodyBytes));
+      var StudentInfo =
+          SinhVienDocument.getElementById("PageHeader1_lblUserFullName");
+      //print(SinhViendata.body.toString());
+
+      print(SinhViendata.statusCode);
+      if (StudentInfo != null) {
+        print(StudentInfo.text);
+      }
+      return 'Login successful';
+    } else {
+      return 'Form not found in the document';
+    }
+  } catch (e) {
+    print("an error occurred: $e");
+    return 'An error occurred: $e';
+  }
+}
+
+Future<String> StudentInfo(String username, String password) async {
+  return await getData(username, password, false);
+}
+
 Future<List<List<dynamic>>> parseExcel(File file) async {
   var bytes = file.readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
@@ -93,73 +220,4 @@ String thutrongtuan(int thu, String batdau, String ketthuc) {
   }
 
   return "";
-}
-
-class HttpClient {
-  final client = Client();
-  Map<String, String> headers = {
-    'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  };
-  Future<String> getLH(String url) async {
-    Response response = await get(Uri.parse(url), headers: headers);
-    if (response.statusCode != 200) {
-      return 'Login failed';
-    }
-    return response.body;
-  }
-
-  Future<Response> post(String url, Map<String, String> body) {
-    return client.post(Uri.parse(url), headers: headers, body: body);
-  }
-}
-
-class HttpClientWithCookies extends BaseClient {
-  final DefaultCookieJar cookieJar;
-  final Client _inner;
-
-  HttpClientWithCookies(this.cookieJar) : _inner = Client();
-
-  @override
-  Future<StreamedResponse> send(BaseRequest request) async {
-    final cookies = await cookieJar.loadForRequest(request.url);
-    final cookieHeader =
-        cookies.map((cookie) => '${cookie.name}=${cookie.value}').join('; ');
-
-    request.headers['Cookie'] = cookieHeader;
-    request.headers['User-Agent'] =
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
-    final response = await _inner.send(request);
-
-    final setCookies = response.headers['set-cookie'];
-    if (setCookies != null) {
-      final uri = request.url;
-      final cookies = setCookies.split(', ');
-      for (var cookie in cookies) {
-        cookieJar.saveFromResponse(uri, [Cookie.fromSetCookieValue(cookie)]);
-      }
-    }
-
-    return response;
-  }
-}
-
-class LichHocJson {
-  void main() {
-    final jar = DefaultCookieJar();
-    final client = HttpClientWithCookies(jar);
-    client.get(Uri.parse(loginURL)).then((response) {
-      print(response);
-    });
-  }
-
-  Future<String> getlichhoc(String username, String password) async {
-    HttpClient client = HttpClient();
-    await client.getLH(loginURL).then((response) {
-      //print(response);
-      return response;
-    });
-    return 'lich hoc';
-  }
 }
