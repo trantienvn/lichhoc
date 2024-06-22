@@ -11,6 +11,8 @@ String data = "";
 Future<void> main() async {
   initializeDateFormatting().then((_) => runApp(MyApp()));
   data = (await getData("dtc235200749", "02092005", false)).toString();
+  print(students.TenSV);
+  print(students.MaSV);
 }
 
 class MyApp extends StatelessWidget {

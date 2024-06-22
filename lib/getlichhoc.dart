@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:html';
+import 'dart:io' as io;
 import 'dart:convert';
 import 'package:excel/excel.dart';
 import 'package:http/http.dart' as http;
@@ -65,7 +66,6 @@ Future<String> getData(String username, String password, bool? ishash) async {
       // Sending POST request
       var postResponse;
       curenURL = urlLogin;
-      var code = 0;
       while (curenURL == urlLogin) {
         postResponse = await http.post(
           Uri.parse(
@@ -84,7 +84,6 @@ Future<String> getData(String username, String password, bool? ishash) async {
         } else if (postResponse.statusCode == 200) {
           curenURL = postResponse.request!.url.toString();
         }
-        code = postResponse.statusCode;
       }
       print(curenURL);
       postResponse = await http.post(
@@ -116,6 +115,34 @@ Future<String> getData(String username, String password, bool? ishash) async {
       print(SinhViendata.statusCode);
       if (StudentInfo != null) {
         print(StudentInfo.text);
+        String name = StudentInfo.text.split('(')[0];
+        RegExp bieuThucChinhQuy = RegExp(r'\(([^)]+)\)');
+        Match ketQua = bieuThucChinhQuy.firstMatch(StudentInfo.text) as Match;
+        students = Student(name, ketQua.group(1) as String);
+        //lay lich hoc file xls
+        var getXlsWeb = await http.get(
+            Uri.parse(
+                "http://220.231.119.171/kcntt/(S($sessioncode))/Reports/Form/StudentTimeTable.aspx"),
+            headers: {
+              'Cookie': SinhViendata.headers['set-cookie'] ?? '',
+            });
+        var getXlsDocument = parse(utf8.decode(getXlsWeb.bodyBytes));
+        var hiddenFields =
+            getXlsDocument.querySelectorAll('input[type="hidden"]');
+        final Map<String, String> hiddenValues = {};
+        for (var hiddenField in hiddenFields) {
+          hiddenValues[hiddenField.attributes['name'] as String] =
+              hiddenField.attributes['value'] as String;
+        }
+        var semester =
+            (getXlsDocument.getElementById('drpSemester') as SelectElement)
+                .value;
+        var term =
+            (getXlsDocument.getElementById('drpTerm') as SelectElement).value;
+        var type =
+            (getXlsDocument.getElementById('drpType') as SelectElement).value;
+        var btnView =
+            (getXlsDocument.getElementById('btnView') as ButtonElement).text;
       }
       return 'Login successful';
     } else {
@@ -127,11 +154,46 @@ Future<String> getData(String username, String password, bool? ishash) async {
   }
 }
 
+class Student {
+  final String TenSV;
+  final String MaSV;
+  const Student(this.TenSV, this.MaSV);
+}
+
+class MonHoc {
+  const MonHoc(this.TenHP, this.MaHP, this.NgayHoc, this.Tuan, this.DiaDiem,
+      this.ThoiGian, this.GiangVien, this.Meet);
+  final String TenHP;
+  final String MaHP;
+  final DateTime NgayHoc;
+  final int Tuan;
+  final String DiaDiem;
+  final String ThoiGian;
+  final String GiangVien;
+  final String Meet;
+  DateTime getNgayHoc() {
+    return NgayHoc;
+  }
+}
+
+class TableData {
+  final List<MonHoc> MonHocs;
+  final String HocKy;
+  final String NamHoc;
+  final Student Students;
+  const TableData(this.HocKy, this.NamHoc, this.Students, this.MonHocs);
+}
+
+String namhoc = "2023-2024";
+String hocky = "1";
+Student students = Student('TenSV', 'MaSV');
+TableData tableData = TableData('HocKy', 'NamHoc', students, []);
+
 Future<String> StudentInfo(String username, String password) async {
   return await getData(username, password, false);
 }
 
-Future<List<List<dynamic>>> parseExcel(File file) async {
+Future<List<List<dynamic>>> parseExcel(io.File file) async {
   var bytes = file.readAsBytesSync();
   var excel = Excel.decodeBytes(bytes);
 
