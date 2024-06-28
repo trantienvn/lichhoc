@@ -4,6 +4,7 @@
 import 'dart:collection';
 
 import 'package:lichhoc/table_calendar.dart';
+import 'lichhocdatafetch.dart';
 
 /// Example event class.
 class Event {
@@ -13,6 +14,16 @@ class Event {
 
   @override
   String toString() => tenHP;
+}
+
+class Schedule {
+  final String tenHP, MaHP, ThoiGian, GiangVien, DiaDiem, Meet;
+
+  const Schedule(this.tenHP, this.MaHP, this.ThoiGian, this.GiangVien,
+      this.DiaDiem, this.Meet);
+
+  @override
+  String toString() => 'tenHP';
 }
 
 /// Example events.
@@ -33,6 +44,34 @@ final _kEventSource = Map.fromIterable(List.generate(50, (index) => index),
       Event('Today\'s Event 2'),
     ],
   });
+Map<DateTime, List<Schedule>> kLichhoc() {
+  return LinkedHashMap<DateTime, List<Schedule>>(
+    equals: isSameDay,
+    hashCode: getHashCode,
+  )..addAll(_kLichhocSource());
+}
+
+Map<DateTime, List<Schedule>> _kLichhocSource() {
+  var lichhoc = getLichhoc()['LichHoc'] as Map<String, dynamic>;
+  Map<DateTime, List<Schedule>> data = {};
+  lichhoc.forEach((String key, dynamic arr) {
+    List<Schedule> list = [];
+    arr.forEach((value) {
+      String timestr =
+          "${value['ThoiGian']['GioVao']} - ${value['ThoiGian']['GioRa']}";
+
+      list.add(Schedule(value['TenHP'], value['MaHP'], timestr,
+          value['GiangVien'], value['DiaDiem'], value['Meet']));
+    });
+    data[DateTime.parse(key)] = list;
+  });
+  return data;
+}
+
+DateTime dateFromString(String dateString) {
+  var date = DateTime.parse(dateString);
+  return date;
+}
 
 int getHashCode(DateTime key) {
   return key.day * 1000000 + key.month * 10000 + key.year;
