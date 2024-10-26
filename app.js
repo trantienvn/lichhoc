@@ -72,7 +72,7 @@ function renderSchedule() {
                     <li>Giảng viên: ${classItem.GiangVien}</li>
                     <li>Thời gian: ${classItem.ThoiGian}</li>
                     <li>Địa điểm: ${classItem.DiaDiem}</li>
-                    <li>Link Meet: <a href="${classItem.Meet}" target="_blank">${linkmeet}</a></li>
+                    <li>Link Meet: <a href="${linkmeet}" target="_blank">${linkmeet}</a></li>
                 </ul>
                 `;
                 dayDiv.appendChild(classDiv);
