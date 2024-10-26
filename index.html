@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thời gian biểu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+            /* Màu nền cho trang */
+            color: #333;
+            /* Màu chữ */
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            /* Màu cho tiêu đề chính */
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: #4CAF50;
+            /* Màu cho tiêu đề ngày */
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        h6 {
+            color: #2196F3;
+            /* Màu cho tiêu đề lớp học */
+            font-size: 1rem;
+        }
+
+        .day {
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #fff;
+            /* Màu nền cho từng ngày */
+            border-radius: 5px;
+            /* Bo góc cho khung */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* Đổ bóng nhẹ cho khung */
+        }
+
+        .class {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e3f2fd;
+            /* Màu nền cho từng lớp học */
+            border-left: 5px solid #2196F3;
+            /* Đường viền bên trái cho lớp học */
+        }
+
+        ul {
+            list-style-type: none;
+            /* Xóa dấu chấm cho danh sách */
+            padding-left: 0;
+            /* Xóa lề bên trái */
+        }
+
+        li {
+            margin-bottom: 5px;
+            /* Khoảng cách giữa các mục trong danh sách */
+        }
+
+        .empty {
+            font-weight: bold;
+            color: #ff5722;
+            /* Màu cho thông báo rảnh */
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Thời gian biểu</h1>
+    <div id="schedule"></div>
+    <script src="schedule.js"></script>
+    <script src="app.js"></script>
+
+</body>
+
+</html>
