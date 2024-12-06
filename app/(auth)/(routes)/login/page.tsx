@@ -55,74 +55,78 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/2 bg-zinc-900 p-6 flex flex-col">
-        <div className="flex items-center space-x-2 text-muted dark:text-muted-foreground">
-          <Command className="w-8 h-8" />
-          <span className={cn("text-xl font-medium", poppins.className)}>
-            Sinh viên
-          </span>
-        </div>
-        <div className="mt-auto text-muted dark:text-muted-foreground">
-          <blockquote className="text-lg">
-            <Suspense fallback="Loading...">
-              &quot; Failure is an option here. If things are not failing, you
-              are not innovating enough. – Thất bại là một lựa chọn ở đây. Nếu
-              mọi thứ không thất bại, bạn không đủ sáng tạo. &quot;
-            </Suspense>
-          </blockquote>
-          <span className="text-sm font-semibold">Elon Musk</span>
-        </div>
-      </div>
-      <div className="w-1/2 flex items-center justify-center">
-        <form
-          className="rounded-lg border bg-card text-card-foreground shadow-sm max-w-xl"
-          onSubmit={handleSubmit}
-        >
-          <div className="flex flex-col p-6 space-y-4">
-            <div className="flex flex-col space-y-1">
-              <h3 className="font-semibold tracking-tight text-2xl">
-                Đăng nhập
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Nhập tài khoản và mật khẩu trên trang dangkitinchi để đăng nhập
-              </p>
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Label className="block" htmlFor="username">
-                Tên đăng nhập
-              </Label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                placeholder="Tên đăng nhập"
-                className="w-full"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <Label className="block" htmlFor="password">
-                Mật khẩu
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Mật khẩu"
-                className="w-full"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? <Spinner /> : "Đăng nhập"}
-            </Button>
-          </div>
-        </form>
+    <div className="flex flex-col h-screen">
+    <div className="w-full bg-zinc-900 p-6 flex flex-col">
+      <div className="flex items-center space-x-2 text-muted dark:text-muted-foreground">
+        <Command className="w-8 h-8" />
+        <span className={cn("text-xl font-medium", poppins.className)}>
+          Sinh viên
+        </span>
       </div>
     </div>
+    <div className="w-full flex items-center justify-center flex-grow">
+      <form
+        className="rounded-lg border bg-card text-card-foreground shadow-sm max-w-xl"
+        onSubmit={handleSubmit}
+      >
+        <div className="flex flex-col p-6 space-y-4">
+          <div className="flex flex-col space-y-1">
+            <h3 className="font-semibold tracking-tight text-2xl">
+              Đăng nhập
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Nhập tài khoản và mật khẩu trên trang dangkitinchi để đăng nhập
+            </p>
+          </div>
+          <div className="flex flex-col space-y-2">
+            <Label className="block" htmlFor="username">
+              Tên đăng nhập
+            </Label>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Tên đăng nhập"
+              className="w-full"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col space-y-2">
+            <Label className="block" htmlFor="password">
+              Mật khẩu
+            </Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Mật khẩu"
+              className="w-full"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? <Spinner /> : "Đăng nhập"}
+          </Button>
+        </div>
+      </form>
+    </div>
+    <div className="w-full flex items-center justify-center mt-auto bg-zinc-900">
+      <div className="text-muted dark:text-muted-foreground">
+        <blockquote className="text-lg">
+          <Suspense fallback="Loading...">
+            &quot; Failure is an option here. If things are not failing, you
+            are not innovating enough. – Thất bại là một lựa chọn ở đây. Nếu
+            mọi thứ không thất bại, bạn không đủ sáng tạo. &quot;
+          </Suspense>
+        </blockquote>
+        <span className="text-sm font-semibold">Elon Musk</span>
+      </div>
+    </div>
+  </div>
+  
+  
   );
 };
 
