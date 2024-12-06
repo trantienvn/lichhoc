@@ -19,7 +19,7 @@ const client = wrapper(
 const responseHeaders = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "https://lichhoc.wuaze.com", // Allow all origins
-  "Access-Control-Allow-Credentials" : "true",
+  "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS", // Allow methods
   "Access-Control-Allow-Headers": "Content-Type, Authorization", // Allow specific headers
 };
@@ -27,7 +27,7 @@ export const OPTIONS = async (request: Request) => {
   return new Response(null, {
     headers: {
       "Access-Control-Allow-Origin": "*", // Hoặc domain của bạn
-      "Access-Control-Allow-Credentials" : "true",
+      "Access-Control-Allow-Credentials": "true",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
@@ -37,40 +37,40 @@ const urlLogin = "http://220.231.119.171/kcntt/login.aspx";
 
 function tinhtoan(tiethoc: string) {
   if (typeof tiethoc !== 'string' || !tiethoc.includes(' --> ')) {
-      return undefined;
+    return undefined;
   }
 
   const [vao, ra] = tiethoc.split(' --> ').map(str => parseInt(str, 10));
   const gio_vao = [
-      '6:45',
-      '7:40',
-      '8:40',
-      '9:40',
-      '10:35',
-      '13:00',
-      '13:55',
-      '14:55',
-      '15:55',
-      '16:50',
-      '18:15',
-      '19:10',
-      '20:05'
+    '6:45',
+    '7:40',
+    '8:40',
+    '9:40',
+    '10:35',
+    '13:00',
+    '13:55',
+    '14:55',
+    '15:55',
+    '16:50',
+    '18:15',
+    '19:10',
+    '20:05'
   ][vao - 1];
 
   const gio_ra = [
-      '7:35',
-      '8:30',
-      '9:30',
-      '10:30',
-      '11:25',
-      '13:50',
-      '14:45',
-      '15:45',
-      '16:45',
-      '17:40',
-      '19:05',
-      '20:00',
-      '20:55'
+    '7:35',
+    '8:30',
+    '9:30',
+    '10:30',
+    '11:25',
+    '13:50',
+    '14:45',
+    '15:45',
+    '16:45',
+    '17:40',
+    '19:05',
+    '20:00',
+    '20:55'
   ][ra - 1];
 
   return `${gio_vao} --> ${gio_ra}`;
@@ -140,33 +140,76 @@ function dateToString(date: Date): string {
 }
 export const GET = async (request: Request) => {
   // Lấy thông tin tài khoản từ URLSearchParams
-  try {
-    const cookieHeader = request.headers.get("cookie");
-    const lichhocResponse = await client.get(
-      "http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx",
+  const urlParams = new URLSearchParams(request.url.split('?')[1]);
+  const username = urlParams.get('msv');
+  const password = urlParams.get('pwd');
+  const session = await client.get(urlLogin);
+  const DOMsession = new JSDOM(session.data);
+  // Util Function
+  const getAllFormElements = (element: HTMLFormElement) =>
+    Array.from(element.elements).filter(
+      (tag) =>
+        ["select", "textarea", "input"].includes(tag.tagName.toLowerCase()) &&
+        tag.getAttribute("name")
+    );
+  // Create Body
+  const body = new URLSearchParams();
+  getAllFormElements(
+    DOMsession.window.document.getElementById("Form1") as HTMLFormElement
+  ).forEach((_: any) => {
+    const key = _.getAttribute("name");
+    let value = _.getAttribute("value");
+    if (key == "txtUserName") {
+      value = username;
+    } else if (key == "txtPassword") {
+      if (password) {
+        value = createHash("md5").update(password).digest("hex");
+      }
+    }
+    if (value) body.append(key, value);
+  });
+  // Post!
+  const data = await client.post(session.request.res.responseUrl, body);
+  const testError = new JSDOM(data.data);
+  const errorInfo = testError.window.document.getElementById("lblErrorInfo");
+  if (errorInfo && errorInfo.textContent !== "") {
+    return new Response(
+      JSON.stringify({
+        error: true,
+        message: errorInfo.textContent,
+        msv: username,
+        pwd: password
+      }),
       {
         headers: {
-          Cookie: cookieHeader, // Use cookie from request
+          "content-type": "application/json",
         },
       }
     );
+  }
 
-    const DOMlichhoc = new JSDOM(lichhocResponse.data);
-    const DOMurl = lichhocResponse.request.res.responseUrl;
-    const document = DOMlichhoc.window.document;
-    const hiddenFields = DOMlichhoc.window.document.querySelectorAll('input[type="hidden"]');
-    const hiddenValues: { [key: string]: string } = {};
-    hiddenFields.forEach(input => {
-      hiddenValues[(input as HTMLInputElement).name] = (input as HTMLInputElement).value;
-    });
-    //lấy lịch học và trả về api
-    const semester = (document.getElementById("drpSemester") as HTMLSelectElement).value;
-    const term = (document.getElementById("drpTerm") as HTMLSelectElement).value;
-    const type = (document.getElementById("drpType") as HTMLSelectElement).value;
-    const btnView = (document.getElementById("btnView") as HTMLButtonElement).value;
+  try {
+    // đăng nhập thành công thì kiểm tra có chuyển trang không nếu chuyển trang thì lấy tên sinh viên
+  const data2 = await client.get("http://220.231.119.171/kcntt/Home.aspx");
+  const testError2 = new JSDOM(data2.data);
+  const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
+  const lh = await client.get("http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx");
+  const DOMlichhoc = new JSDOM(lh.data);
+  const DOMurl = lh.request.res.responseUrl;
+  const document = DOMlichhoc.window.document;
+  const hiddenFields = DOMlichhoc.window.document.querySelectorAll('input[type="hidden"]');
+  const hiddenValues: { [key: string]: string } = {};
+  hiddenFields.forEach(input => {
+    hiddenValues[(input as HTMLInputElement).name] = (input as HTMLInputElement).value;
+  });
+  const semester = (document.getElementById("drpSemester") as HTMLSelectElement).value;
+  const term = (document.getElementById("drpTerm") as HTMLSelectElement).value;
+  const type = (document.getElementById("drpType") as HTMLSelectElement).value;
+  const btnView = (document.getElementById("btnView") as HTMLButtonElement).value;
+
     const hockiELM = document.getElementById("drpSemester") as HTMLSelectElement;
     let hocki = hockiELM.options[hockiELM.selectedIndex].text;
-    const namhoc = hocki.split("_")[1]+' - '+hocki.split("_")[2];
+    const namhoc = hocki.split("_")[1] + ' - ' + hocki.split("_")[2];
     hocki = hocki.split("_")[0];
     const exportResponse = await client.post(DOMurl, new URLSearchParams({
       ...hiddenValues,
@@ -176,7 +219,6 @@ export const GET = async (request: Request) => {
       btnView: btnView
     }).toString(), {
       headers: {
-        Cookie: cookieHeader, // Use cookie from request
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       responseType: 'arraybuffer'
@@ -212,7 +254,7 @@ export const GET = async (request: Request) => {
         const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
         const gv = GiangVien.split('\n');
         endDate = dateToString(new Date(ngayhoct.Den));
-        if(!testdata[Ngay]){
+        if (!testdata[Ngay]) {
           testdata[Ngay] = [];
           testdata[Ngay].push({
             STT,
@@ -271,7 +313,7 @@ export const GET = async (request: Request) => {
         error: true,
         message: e,
 
-      }),{headers: responseHeaders}
+      }), { headers: responseHeaders }
     );
   }
 };
