@@ -18,7 +18,7 @@ const client = wrapper(
 );
 const responseHeaders = {
   "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "https://lichhoc.wuaze.com", // Allow all origins
+  "Access-Control-Allow-Origin": "*", // Allow all origins
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS", // Allow methods
   "Access-Control-Allow-Headers": "Content-Type, Authorization", // Allow specific headers
