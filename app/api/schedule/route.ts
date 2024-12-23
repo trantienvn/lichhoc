@@ -27,8 +27,10 @@ const responseHeaders = {
 const URLS = {
   login: "http://220.231.119.171/kcntt/login.aspx",
   home: "http://220.231.119.171/kcntt/Home.aspx",
-  reports: "http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx",
+  studentTimeTable: "http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx",
 };
+
+const cache = new Map(); // Cache để lưu trữ kết quả tạm thời
 
 export const OPTIONS = async (request: Request) => {
   return new Response(null, {
@@ -111,6 +113,13 @@ export const GET = async (request: Request) => {
     const username = urlParams.get('msv');
     const password = urlParams.get('pwd');
 
+    const cacheKey = `${username}-${password}`;
+    if (cache.has(cacheKey)) {
+      return new Response(JSON.stringify(cache.get(cacheKey)), {
+        headers: responseHeaders
+      });
+    }
+
     const session = await client.get(URLS.login);
     const DOMsession = new JSDOM(session.data);
 
@@ -139,15 +148,16 @@ export const GET = async (request: Request) => {
     const errorInfo = testError.window.document.getElementById("lblErrorInfo");
 
     if (errorInfo && errorInfo.textContent !== "") {
-      return new Response(
-        JSON.stringify({
-          error: true,
-          message: errorInfo.textContent,
-          msv: username,
-          pwd: password,
-        }),
-        { headers: { "content-type": "application/json" } }
-      );
+      const errorResponse = {
+        error: true,
+        message: errorInfo.textContent,
+        msv: username,
+        pwd: password,
+      };
+      cache.set(cacheKey, errorResponse);
+      return new Response(JSON.stringify(errorResponse), {
+        headers: { "content-type": "application/json" }
+      });
     }
 
     try {
@@ -155,7 +165,7 @@ export const GET = async (request: Request) => {
       const testError2 = new JSDOM(data2.data);
       const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
 
-      const lh = await client.get(URLS.reports);
+      const lh = await client.get(URLS.studentTimeTable);
       const DOMlichhoc = new JSDOM(lh.data);
       const DOMurl = lh.request.res.responseUrl;
       const document = DOMlichhoc.window.document;
@@ -235,15 +245,16 @@ export const GET = async (request: Request) => {
         }
       }
 
-      return new Response(
-        JSON.stringify({
-          HocKi: hocki,
-          NamHoc: namhoc,
-          lichhocdata: testdata,
-          endDate
-        }),
-        { headers: responseHeaders }
-      );
+      const successResponse = {
+        HocKi: hocki,
+        NamHoc: namhoc,
+        lichhocdata: testdata,
+        endDate
+      };
+      cache.set(cacheKey, successResponse);
+      return new Response(JSON.stringify(successResponse), {
+        headers: responseHeaders
+      });
     } catch (e: any) {
       return new Response(
         JSON.stringify({
