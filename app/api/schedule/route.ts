@@ -9,7 +9,7 @@ const jar = new CookieJar();
 const client = wrapper(
   axios.create({
     jar,
-    timeout: 10000,
+    timeout: 30000,
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     },
@@ -102,149 +102,161 @@ function dateToString(date: Date): string {
 }
 
 export const GET = async (request: Request) => {
-  const urlParams = new URLSearchParams(request.url.split('?')[1]);
-  const username = urlParams.get('msv');
-  const password = urlParams.get('pwd');
-
-  const session = await client.get(urlLogin);
-  const DOMsession = new JSDOM(session.data);
-
-  const getAllFormElements = (element: HTMLFormElement) =>
-    Array.from(element.elements).filter(
-      (tag) => ["select", "textarea", "input"].includes(tag.tagName.toLowerCase()) && tag.getAttribute("name")
-    );
-
-  const body = new URLSearchParams();
-  getAllFormElements(DOMsession.window.document.getElementById("Form1") as HTMLFormElement)
-    .forEach((input: any) => {
-      const key = input.getAttribute("name");
-      let value = input.getAttribute("value");
-
-      if (key === "txtUserName") {
-        value = username;
-      } else if (key === "txtPassword" && password) {
-        value = createHash("md5").update(password).digest("hex");
-      }
-
-      if (value) body.append(key, value);
-    });
-
-  const data = await client.post(session.request.res.responseUrl, body);
-  const testError = new JSDOM(data.data);
-  const errorInfo = testError.window.document.getElementById("lblErrorInfo");
-
-  if (errorInfo && errorInfo.textContent !== "") {
-    return new Response(
-      JSON.stringify({
-        error: true,
-        message: errorInfo.textContent,
-        msv: username,
-        pwd: password,
-      }),
-      { headers: { "content-type": "application/json" } }
-    );
-  }
-
   try {
-    const data2 = await client.get("http://220.231.119.171/kcntt/Home.aspx");
-    const testError2 = new JSDOM(data2.data);
-    const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
+    const urlParams = new URLSearchParams(request.url.split('?')[1]);
+    const username = urlParams.get('msv');
+    const password = urlParams.get('pwd');
 
-    const lh = await client.get("http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx");
-    const DOMlichhoc = new JSDOM(lh.data);
-    const DOMurl = lh.request.res.responseUrl;
-    const document = DOMlichhoc.window.document;
-    const hiddenFields = document.querySelectorAll('input[type="hidden"]');
-    const hiddenValues: { [key: string]: string } = {};
-    
-    hiddenFields.forEach(input => {
-      hiddenValues[(input as HTMLInputElement).name] = (input as HTMLInputElement).value;
-    });
+    const session = await client.get(urlLogin);
+    const DOMsession = new JSDOM(session.data);
 
-    const semester = (document.getElementById("drpSemester") as HTMLSelectElement).value;
-    const term = (document.getElementById("drpTerm") as HTMLSelectElement).value;
-    const type = (document.getElementById("drpType") as HTMLSelectElement).value;
-    const btnView = (document.getElementById("btnView") as HTMLButtonElement).value;
+    const getAllFormElements = (element: HTMLFormElement) =>
+      Array.from(element.elements).filter(
+        (tag) => ["select", "textarea", "input"].includes(tag.tagName.toLowerCase()) && tag.getAttribute("name")
+      );
 
-    const hockiELM = document.getElementById("drpSemester") as HTMLSelectElement;
-    let hocki = hockiELM.options[hockiELM.selectedIndex].text;
-    const namhoc = `${hocki.split("_")[1]} - ${hocki.split("_")[2]}`;
-    hocki = hocki.split("_")[0];
+    const body = new URLSearchParams();
+    getAllFormElements(DOMsession.window.document.getElementById("Form1") as HTMLFormElement)
+      .forEach((input: any) => {
+        const key = input.getAttribute("name");
+        let value = input.getAttribute("value");
 
-    const exportResponse = await client.post(DOMurl, new URLSearchParams({
-      ...hiddenValues,
-      drpSemester: semester,
-      drpTerm: term,
-      drpType: type,
-      btnView: btnView,
-    }).toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      responseType: 'arraybuffer'
-    });
-
-    const data = new Uint8Array(exportResponse.data);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-    const testdata: any = {};
-    let endDate = "01/01/1970";
-    let ngayhoct = { Tu: "", Den: "" };
-    
-    for (let i = 10; i < jsonData.length; i++) {
-      const row = jsonData[i] as any;
-      const STT = row[0];
-      const TenHP = row[1];
-      const GiangVien = row[2];
-      const ThuNgay = row[3];
-      const tg = row[4];
-      const LetTime = tinhtoan(tg);
-      
-      let ThoiGian = "";
-      const TTuan = TenHP.match(/\((.*?)\)/)[1];
-
-      if (LetTime) {
-        ThoiGian = LetTime;
-        const DiaDiem = row[5];
-        const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
-        const gv = GiangVien.split('\n');
-        endDate = dateToString(new Date(ngayhoct.Den));
-
-        if (!testdata[Ngay]) {
-          testdata[Ngay] = [];
+        if (key === "txtUserName") {
+          value = username;
+        } else if (key === "txtPassword" && password) {
+          value = createHash("md5").update(password).digest("hex");
         }
-        testdata[Ngay].push({
-          STT,
-          Ngay,
-          ThoiGian,
-          TenHP,
-          GiangVien: gv[0],
-          Meet: gv[1],
-          DiaDiem
-        });
-      } else {
-        const Tuan = parseInt(TTuan, 10);
-        const NgayHoc = lichtuan(TTuan);
-        ngayhoct = NgayHoc;
-      }
+
+        if (value) body.append(key, value);
+      });
+
+    const data = await client.post(session.request.res.responseUrl, body);
+    const testError = new JSDOM(data.data);
+    const errorInfo = testError.window.document.getElementById("lblErrorInfo");
+
+    if (errorInfo && errorInfo.textContent !== "") {
+      return new Response(
+        JSON.stringify({
+          error: true,
+          message: errorInfo.textContent,
+          msv: username,
+          pwd: password,
+        }),
+        { headers: { "content-type": "application/json" } }
+      );
     }
 
-    return new Response(
-      JSON.stringify({
-        HocKi: hocki,
-        NamHoc: namhoc,
-        lichhocdata: testdata,
-        endDate
-      }), 
-      { headers: responseHeaders }
-    );
-  } catch (e: any) {
+    try {
+      const data2 = await client.get("http://220.231.119.171/kcntt/Home.aspx");
+      const testError2 = new JSDOM(data2.data);
+      const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
+
+      const lh = await client.get("http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx");
+      const DOMlichhoc = new JSDOM(lh.data);
+      const DOMurl = lh.request.res.responseUrl;
+      const document = DOMlichhoc.window.document;
+      const hiddenFields = document.querySelectorAll('input[type="hidden"]');
+      const hiddenValues: { [key: string]: string } = {};
+
+      hiddenFields.forEach(input => {
+        hiddenValues[(input as HTMLInputElement).name] = (input as HTMLInputElement).value;
+      });
+
+      const semester = (document.getElementById("drpSemester") as HTMLSelectElement).value;
+      const term = (document.getElementById("drpTerm") as HTMLSelectElement).value;
+      const type = (document.getElementById("drpType") as HTMLSelectElement).value;
+      const btnView = (document.getElementById("btnView") as HTMLButtonElement).value;
+
+      const hockiELM = document.getElementById("drpSemester") as HTMLSelectElement;
+      let hocki = hockiELM.options[hockiELM.selectedIndex].text;
+      const namhoc = `${hocki.split("_")[1]} - ${hocki.split("_")[2]}`;
+      hocki = hocki.split("_")[0];
+
+      const exportResponse = await client.post(DOMurl, new URLSearchParams({
+        ...hiddenValues,
+        drpSemester: semester,
+        drpTerm: term,
+        drpType: type,
+        btnView: btnView,
+      }).toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        responseType: 'arraybuffer'
+      });
+
+      const data = new Uint8Array(exportResponse.data);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      const testdata: any = {};
+      let endDate = "01/01/1970";
+      let ngayhoct = { Tu: "", Den: "" };
+
+      for (let i = 10; i < jsonData.length; i++) {
+        const row = jsonData[i] as any;
+        const STT = row[0];
+        const TenHP = row[1];
+        const GiangVien = row[2];
+        const ThuNgay = row[3];
+        const tg = row[4];
+        const LetTime = tinhtoan(tg);
+
+        let ThoiGian = "";
+        const TTuan = TenHP.match(/\((.*?)\)/)[1];
+
+        if (LetTime) {
+          ThoiGian = LetTime;
+          const DiaDiem = row[5];
+          const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
+          const gv = GiangVien.split('\n');
+          endDate = dateToString(new Date(ngayhoct.Den));
+
+          if (!testdata[Ngay]) {
+            testdata[Ngay] = [];
+          }
+          testdata[Ngay].push({
+            STT,
+            Ngay,
+            ThoiGian,
+            TenHP,
+            GiangVien: gv[0],
+            Meet: gv[1],
+            DiaDiem
+          });
+        } else {
+          const Tuan = parseInt(TTuan, 10);
+          const NgayHoc = lichtuan(TTuan);
+          ngayhoct = NgayHoc;
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          HocKi: hocki,
+          NamHoc: namhoc,
+          lichhocdata: testdata,
+          endDate
+        }),
+        { headers: responseHeaders }
+      );
+    } catch (e: any) {
+      return new Response(
+        JSON.stringify({
+          error: true,
+          message: e.message || e,
+        }),
+        { headers: responseHeaders }
+      );
+    }
+  }
+  catch (e: any) {
+    console.error("Lỗi xảy ra:", e); // Ghi lại lỗi để phân tích
     return new Response(
       JSON.stringify({
         error: true,
-        message: e.message || e,
-      }), 
+        message: e.message || "Đã xảy ra lỗi không xác định.",
+      }),
       { headers: responseHeaders }
     );
   }
