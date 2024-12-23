@@ -24,13 +24,17 @@ const responseHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
+const URLS = {
+  login: "http://220.231.119.171/kcntt/login.aspx",
+  home: "http://220.231.119.171/kcntt/Home.aspx",
+  reports: "http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx",
+};
+
 export const OPTIONS = async (request: Request) => {
   return new Response(null, {
     headers: responseHeaders,
   });
 };
-
-const urlLogin = "http://220.231.119.171/kcntt/login.aspx";
 
 function tinhtoan(tiethoc: string) {
   if (typeof tiethoc !== 'string' || !tiethoc.includes(' --> ')) {
@@ -107,7 +111,7 @@ export const GET = async (request: Request) => {
     const username = urlParams.get('msv');
     const password = urlParams.get('pwd');
 
-    const session = await client.get(urlLogin);
+    const session = await client.get(URLS.login);
     const DOMsession = new JSDOM(session.data);
 
     const getAllFormElements = (element: HTMLFormElement) =>
@@ -147,11 +151,11 @@ export const GET = async (request: Request) => {
     }
 
     try {
-      const data2 = await client.get("http://220.231.119.171/kcntt/Home.aspx");
+      const data2 = await client.get(URLS.home);
       const testError2 = new JSDOM(data2.data);
       const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
 
-      const lh = await client.get("http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx");
+      const lh = await client.get(URLS.reports);
       const DOMlichhoc = new JSDOM(lh.data);
       const DOMurl = lh.request.res.responseUrl;
       const document = DOMlichhoc.window.document;
