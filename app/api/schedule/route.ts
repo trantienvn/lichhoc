@@ -164,7 +164,12 @@ export const GET = async (request: Request) => {
       const data2 = await client.get(URLS.home);
       const testError2 = new JSDOM(data2.data);
       const studentInfo = testError2.window.document.getElementById("PageHeader1_lblUserFullName");
+      let HoTen: string = "Khách";
+      let MaSV: string = username?.toUpperCase() || "Unknown";
+      if(studentInfo) {
+        HoTen = (studentInfo.textContent as string).split("(")[0];
 
+      }
       const lh = await client.get(URLS.studentTimeTable);
       const DOMlichhoc = new JSDOM(lh.data);
       const DOMurl = lh.request.res.responseUrl;
@@ -248,6 +253,8 @@ export const GET = async (request: Request) => {
       const successResponse = {
         HocKi: hocki,
         NamHoc: namhoc,
+        HoTen,
+        MaSV,
         lichhocdata: testdata,
         endDate
       };
