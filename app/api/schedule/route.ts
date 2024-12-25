@@ -229,6 +229,7 @@ export const GET = async (request: Request) => {
           const DiaDiem = row[5];
           const Ngay = thutrongtuan(ThuNgay, parseDate(ngayhoct.Tu), parseDate(ngayhoct.Den));
           const gv = GiangVien.split('\n');
+          const Meet = gv[1].startsWith('http') ? gv[1] : `https://${gv[1]}`;
           endDate = dateToString(new Date(ngayhoct.Den));
 
           if (!testdata[Ngay]) {
@@ -240,7 +241,7 @@ export const GET = async (request: Request) => {
             ThoiGian,
             TenHP,
             GiangVien: gv[0],
-            Meet: gv[1],
+            Meet,
             DiaDiem
           });
         } else {
