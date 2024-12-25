@@ -25,9 +25,9 @@ const responseHeaders = {
 };
 
 const URLS = {
-  login: "http://220.231.119.171/kcntt/login.aspx",
-  home: "http://220.231.119.171/kcntt/Home.aspx",
-  studentTimeTable: "http://220.231.119.171/kcntt/Reports/Form/StudentTimeTable.aspx",
+  login: "http://dangkytinchi.ictu.edu.vn/kcntt/login.aspx",
+  home: "http://dangkytinchi.ictu.edu.vn/kcntt/Home.aspx",
+  studentTimeTable: "http://dangkytinchi.ictu.edu.vn/kcntt/Reports/Form/StudentTimeTable.aspx",
 };
 
 const cache = new Map(); // Cache để lưu trữ kết quả tạm thời
